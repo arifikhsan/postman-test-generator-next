@@ -50,7 +50,6 @@ class Home extends Component {
       this.state.output += `
       pm.test('response body should have the correct property of "${property}"', () => {
         const responseJson = pm.response.json();
-
         pm.expect(responseJson).to.have.ownProperty('${property}');
       });
       `;
@@ -76,7 +75,6 @@ class Home extends Component {
         this.state.output += `
         pm.test('response body should have the correct and value for "${property}"', () => {
           const responseJson = pm.response.json();
-
           pm.expect(responseJson.${property}).to.equals(${equalWithValue});
         });
         `;
