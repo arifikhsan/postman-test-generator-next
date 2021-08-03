@@ -109,14 +109,15 @@ class Home extends Component {
           </h1>
 
           <p className='mt-3 text-2xl'>
-            Generate test case by json response. Save fingers, save time.
+            Generate test case by json response. Better apps, save fingers, save
+            time.
           </p>
 
           <div className='w-full mt-6'>
             <h2>Step 1: Paste your JSON response here</h2>
             <Formik
               initialValues={{
-                input: '{"message": "hello world", "count": 5}',
+                input: '{"message": "Hello world", "number": 12345}',
               }}
               validate={(values) => {
                 const errors = {};
@@ -153,7 +154,7 @@ class Home extends Component {
                       className='px-4 py-2 mt-6 border'>
                       Step 2: 💪 Click here to generate test cases 💪
                     </button>
-                    {!this.state.done && <div className='py-4'></div>}
+                    {!this.state.done && <div className='py-2'></div>}
                   </Form>
                 );
               }}
@@ -161,6 +162,17 @@ class Home extends Component {
           </div>
 
           {this.state.done && <CodeSnippet code={this.state.output} />}
+
+          <p className='py-4'>
+            Example endpoint for mock response:
+            <a
+              className='flex items-center justify-center'
+              href='https://postman-test-generator.vercel.app/api/hello'
+              target='_blank'
+              rel='noopener noreferrer'>
+              https://postman-test-generator.vercel.app/api/hello
+            </a>
+          </p>
         </main>
 
         <footer className='flex items-center justify-center w-full h-24 border-t'>
