@@ -1,3 +1,4 @@
+import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { has, isPlainObject, keys, values } from 'lodash';
 import Head from 'next/head';
 import { Component } from 'react';
@@ -6,39 +7,28 @@ class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: '{"message": "hello"}',
+      input: '',
       output: '',
+      done: false,
     };
-
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({ value: event.target.value });
-  }
-
-  handleSubmit(event) {
-    alert('An essay was submitted: ' + this.state.value);
-    event.preventDefault();
   }
 
   generateTests = () => {
+    this.state.done = false;
     this.state.output = '';
-    const input = JSON.parse(this.state.value);
+    let input = this.state.input;
 
-    if (Array.isArray(input)) {
-      alert('Array is not supported yet :(');
-    }
+    let jsonInput = JSON.parse(this.state.input);
+    // if (!isPlainObject(input)) {
+    //   alert(`This data type of "${typeof input}" is not supported yet :(`);
+    //   return;
+    // }
 
-    if (!isPlainObject(input)) {
-      alert(`This data type of ${typeof input} is not supported yet :(`);
-    }
-
-    const vals = values(input);
+    const vals = values(jsonInput);
     vals.forEach((val) => {
       if (typeof val === 'object') {
-        alert(`This data type of ${typeof val} is not supported yet :(`);
+        alert(`This data type of "${typeof val}" is not supported yet :(`);
+        return;
       }
     });
 
@@ -48,9 +38,9 @@ class Home extends Component {
         const responseJson = pm.response.json();
         pm.expect(responseJson).to.be.an('object');
       });
-      \n\n`;
+      `;
 
-    const properties = keys(input);
+    const properties = keys(jsonInput);
     properties.forEach((property) => {
       // this.state.output += `has ${property}\n`;
       this.state.output += `
@@ -59,9 +49,9 @@ class Home extends Component {
 
         pm.expect(responseJson).to.have.ownProperty('${property}');
       });
-      \n\n`;
+      `;
 
-      const datatype = typeof input[property];
+      const datatype = typeof jsonInput[property];
       // this.state.output += `property ${property} is ${datatype}\n`;
       this.state.output += `
       pm.test('response body should have the correct data type for "${property}"', () => {
@@ -71,26 +61,41 @@ class Home extends Component {
         pm.expect(responseJson.${property}).not.eq(undefined);
         pm.expect(responseJson.${property}).not.eq(null);
       });
-      \n\n`;
+      `;
 
-      if (input[property]) {
-        // this.state.output += `property ${property} has value of \"${input[property]}\"\n`;
+      if (jsonInput[property]) {
+        // this.state.output += `property ${property} has value of \"${jsonInput[property]}\"\n`;
         this.state.output += `
         pm.test('response body should have the correct and value for "${property}"', () => {
           const responseJson = pm.response.json();
 
-          pm.expect(responseJson.${property}).to.equals('${input[property]}');
+          pm.expect(responseJson.${property}).to.equals('${jsonInput[property]}');
         });
-        \n\n`;
+        `;
       }
     });
 
     console.log(this.state.output);
+    this.state.done = true;
+  };
+
+  renderResult = () => {
+    const { output } = this.state;
+
+    return (
+      <div className='w-full my-6'>
+        <h2>Step 3: Copy this tests to Postman</h2>
+        <textarea
+          className='w-full mt-4 border'
+          rows='10'
+          id='output'
+          value={output}
+          readOnly></textarea>
+      </div>
+    );
   };
 
   render() {
-    const { output } = this.state;
-
     return (
       <div className='flex flex-col items-center justify-center min-h-screen py-2'>
         <Head>
@@ -105,36 +110,61 @@ class Home extends Component {
 
           <p className='mt-3 text-2xl'>Generate test case by json response.</p>
 
-          <div className='mt-6'>
+          <div className='w-full mt-6'>
             <h2>Step 1: Paste your response here</h2>
-            <textarea
-              value={this.state.value}
-              onChange={this.handleChange}
-              className='w-full mt-4 border'
-              rows='5'
-              placeholder="{'message': 'Hello World'}"></textarea>
+            <Formik
+              initialValues={{ input: '' }}
+              validate={(values) => {
+                const errors = {};
+                if (!values.input) {
+                  errors.input = 'Response body is required';
+                }
+                return errors;
+              }}
+              onSubmit={(values, { setSubmitting }) => {
+                this.setState({
+                  input: values.input,
+                });
+                this.generateTests();
+                setSubmitting(false);
+              }}>
+              {({ isSubmitting }) => {
+                return (
+                  <Form>
+                    <Field
+                      name='input'
+                      as='textarea'
+                      className='w-full mt-4 border'
+                      rows='10'
+                      placeholder="{'message': 'Hello World'}"
+                    />
+                    <ErrorMessage
+                      name='input'
+                      className='text-red-500'
+                      component='div'
+                    />
+                    <button
+                      type='submit'
+                      disabled={isSubmitting}
+                      className='px-4 py-2 mt-6 border'>
+                      Step 2: 💪 Click to generate test cases 💪
+                    </button>
+                  </Form>
+                );
+              }}
+            </Formik>
           </div>
-          <button
-            className='px-4 py-2 mt-6 border'
-            onClick={this.generateTests}>
-            Generate test cases 🎆
-          </button>
-          <div className='mt-6'>
-            <h2>Step 2: Copy this tests to Postman {output}</h2>
-            {/* <p>{this.state.value}</p>
-            <p>{this.state.output}</p> */}
-            <textarea className='mt-4' value={output} readOnly></textarea>
-          </div>
+
+          {this.state.done && this.renderResult()}
         </main>
 
         <footer className='flex items-center justify-center w-full h-24 border-t'>
           <a
             className='flex items-center justify-center'
-            href='https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app'
+            href='https://www.github.com/arifikhsan/postman-test-generator-next'
             target='_blank'
             rel='noopener noreferrer'>
-            Powered by{' '}
-            <img src='/vercel.svg' alt='Vercel Logo' className='h-4 ml-2' />
+            GitHub Repository
           </a>
         </footer>
       </div>
