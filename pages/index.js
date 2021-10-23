@@ -101,6 +101,7 @@ class Home extends Component {
         <Head>
           <title>Postman Test Generator</title>
           <link rel='icon' href='/favicon.ico' />
+          <meta name="dicoding:email" content="arif.ikhsanudin.id@gmail.com">
         </Head>
 
         <main className='flex flex-col items-center flex-1 w-full px-4 text-center md:px-20 md:justify-center'>
